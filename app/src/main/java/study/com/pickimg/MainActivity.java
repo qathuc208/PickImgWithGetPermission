@@ -6,7 +6,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -20,20 +24,36 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Random;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
+import static android.provider.Settings.System.DATE_FORMAT;
 
 public class MainActivity extends AppCompatActivity {
 
     private int SELECT_FILE = 100;
     private int REQUEST_CAMERA = 200;
+    private static final String IMAGE_DIRECTORY = "/thuc.png";
+    String realPath;
     String userChoosenTask = "";
     Button btnSelect;
-    ImageView ivImage;
+    //ImageView ivImage;
+    CircleImageView ivImage;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void init() {
         btnSelect = (Button) findViewById(R.id.btnSlectPhoto);
-        ivImage = (ImageView) findViewById(R.id.ivImage);
+        ivImage = (CircleImageView) findViewById(R.id.ivImage);
 
         btnSelect.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,42 +78,65 @@ public class MainActivity extends AppCompatActivity {
     public void selectImage() {
         final CharSequence[] items = {"Take Photo", "Chose from Library", "Cancel"};
 
-
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("Add Photo")
                 .setItems(items, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         // Create new class check permission
-                        boolean result=Utility.checkPermission(MainActivity.this);
-                        if(items[which].equals("Take Photo")) {
-                            userChoosenTask="Take Photo";
-                            if(result)
+                        boolean result = Utility.checkPermission(MainActivity.this);
+                        if (items[which].equals("Take Photo")) {
+                            userChoosenTask = "Take Photo";
+                            if (result)
                                 cameraIntent();
                         } else if (items[which].equals("Chose from Library")) {
-                            userChoosenTask="Chose from Library";
-                            if(result)
+                            userChoosenTask = "Chose from Library";
+                            if (result)
                                 galleryIntent();
-                        } else  if(items[which].equals("Cancel")) {
-                         dialog.dismiss();
+                        } else if (items[which].equals("Cancel")) {
+                            dialog.dismiss();
                         }
                     }
                 });
         builder.show();
     }
 
-    private void cameraIntent()
-    {
+    private void cameraIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, REQUEST_CAMERA);
     }
 
-    public void galleryIntent()
-    {
+    public String saveImage(Bitmap myBitmap) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        myBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        File wallpaperDirectory = new File(Environment.getExternalStorageDirectory() + IMAGE_DIRECTORY);
+        if (!wallpaperDirectory.exists()) {  // have the object build the directory structure, if needed.
+            wallpaperDirectory.mkdirs();
+        }
+
+        try {
+            File f = new File(wallpaperDirectory, Calendar.getInstance().getTimeInMillis() + ".jpg");
+            f.createNewFile();
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+            MediaScannerConnection.scanFile(this,
+                    new String[]{f.getPath()},
+                    new String[]{"image/jpeg"}, null);
+            fo.close();
+            Log.d("abc", "File Saved::---&gt;" + f.getAbsolutePath());
+
+            return f.getAbsolutePath();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        return "";
+    }
+
+    public void galleryIntent() {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);//
-        startActivityForResult(Intent.createChooser(intent, "Select File"),SELECT_FILE);
+        startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
     }
 
     @Override
@@ -101,12 +144,12 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch ((requestCode)) {
             case Utility.MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE:
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if(userChoosenTask.equals("Take Photo"))
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (userChoosenTask.equals("Take Photo"))
                         cameraIntent();
-                    else if(userChoosenTask.equals("Choose from Library"))
+                    else if (userChoosenTask.equals("Choose from Library"))
                         Log.d("abc", "Call it 1");
-                        galleryIntent();
+                    galleryIntent();
                 } else {
 
                 }
@@ -121,17 +164,23 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == SELECT_FILE)
                 onSelectFromGalleryResult(data);
-            else if (requestCode == REQUEST_CAMERA)
+            else if (requestCode == REQUEST_CAMERA) {
+                Uri uri = data.getData();
+                realPath = getRealPathFromURI(uri);
+
+                Log.d("abc","realPath ===== " + realPath);
                 onCaptureImageResult(data);
+            }
+
         }
     }
 
     @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
-        Bitmap bm=null;
+        Bitmap bm = null;
         if (data != null) {
             try {
-                Log.d("Abc","take galerry");
+                Log.d("Abc", "take galerry");
                 bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -142,10 +191,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void onCaptureImageResult(Intent data) {
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        Uri uri = data.getData();
+        realPath = getRealPathFromURI(uri);
+
+        Bitmap bm = ImageUtils.getInstant().getCompressedBitmap(realPath);
+        ivImage.setImageBitmap(bm);
+
+        // CALL THIS METHOD TO GET THE URI FROM THE BITMAP
+        Uri tempUri = getImageUri(getApplicationContext(), thumbnail);
+
+        // CALL THIS METHOD TO GET THE ACTUAL PATH
+        File finalFile = new File(getRealPathFromURI(tempUri));
+
+        /*ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        thumbnail.compress(Bitmap.CompressFormat.JPEG , 80, bytes);
+
+        Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(bytes.toByteArray()));
+
         File destination = new File(Environment.getExternalStorageDirectory(),
-                System.currentTimeMillis() + ".jpg");
+                System.currentTimeMillis() + ".jpeg");
         FileOutputStream fo;
         try {
             destination.createNewFile();
@@ -157,7 +221,38 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ivImage.setImageBitmap(thumbnail);
+        //ivImage.setLayoutParams(new LinearLayout.LayoutParams(1000, 1000));
+        ivImage.setImageBitmap(decoded);
+        //ivImage.setRotation(0);
+
+        saveImage(decoded);*/
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    public Uri getImageUri1(Context inContext, Bitmap inImage) {
+        Bitmap OutImage = Bitmap.createScaledBitmap(inImage, 1000, 1000,true);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), OutImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    public String getRealPathFromURI(Uri uri) {
+        String path = "";
+        if (getContentResolver() != null) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                path = cursor.getString(idx);
+                cursor.close();
+            }
+        }
+        return path;
     }
 
     public static class Utility {
