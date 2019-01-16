@@ -27,6 +27,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import com.q42.android.scrollingimageview.ScrollingImageView;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnSelect;
     //ImageView ivImage;
     CircleImageView ivImage;
-
+    ScrollingImageView scrollingImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,13 +68,17 @@ public class MainActivity extends AppCompatActivity {
     public void init() {
         btnSelect = (Button) findViewById(R.id.btnSlectPhoto);
         ivImage = (CircleImageView) findViewById(R.id.ivImage);
-
         btnSelect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 selectImage();
             }
         });
+
+        //Test ScrollingImageView
+        scrollingImageView = (ScrollingImageView) findViewById(R.id.testScroll);
+        scrollingImageView.setSpeed(44f);
+        scrollingImageView.start();
     }
 
     public void selectImage() {
