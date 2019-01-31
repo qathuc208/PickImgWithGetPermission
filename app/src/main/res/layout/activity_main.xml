@@ -11,36 +11,42 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:orientation="vertical"
         android:padding="5dp">
 
         <Button
+            android:id="@+id/btnSlectPhoto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/btnSlectPhoto"
-            android:text="Select Photo"/>
+            android:text="Select Photo" />
     </LinearLayout>
-    
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="10dp" >
+        android:padding="10dp">
 
-<!--        <ImageView
-            android:id="@+id/ivImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_launcher_background" />-->
+        <!--        <ImageView
+                    android:id="@+id/ivImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_launcher_background" />-->
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/ivImage"
-            android:src="@drawable/ic_launcher_background"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            app:civ_border_width="2dp"
-            app:civ_border_color="#000000"/>
+            android:src="@drawable/ic_launcher_background"
+            app:civ_border_color="#000000"
+            app:civ_border_width="2dp" />
+
+        <ImageView
+            android:id="@+id/imgViewImageTest"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:src="@mipmap/ic_launcher"/>
 
         <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:scrolling_image_view="http://schemas.android.com/apk/res-auto"
@@ -70,13 +76,13 @@
                     android:layout_marginTop="10dp">
 
                     <com.q42.android.scrollingimageview.ScrollingImageView
+                        android:id="@+id/testScroll"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:id="@+id/testScroll"
+                        scrolling_image_view:randomness="@array/randomness"
                         scrolling_image_view:speed="3dp"
-                        scrolling_image_view:src="@array/random_imgs"
-                        scrolling_image_view:randomness="@array/randomness" />
+                        scrolling_image_view:src="@array/random_imgs" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -121,8 +127,8 @@
                     style="@style/Base.TextAppearance.AppCompat.Title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Left to right scrolling background"
-                    android:layout_marginTop="30dp"/>
+                    android:layout_marginTop="30dp"
+                    android:text="Left to right scrolling background" />
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -148,8 +154,8 @@
                     style="@style/Base.TextAppearance.AppCompat.Title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Landscape with tiles"
-                    android:layout_marginTop="30dp"/>
+                    android:layout_marginTop="30dp"
+                    android:text="Landscape with tiles" />
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -160,8 +166,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:src="@mipmap/layer_1"
-                        android:scaleType="fitXY" />
+                        android:scaleType="fitXY"
+                        android:src="@mipmap/layer_1" />
 
                     <ImageView
                         android:layout_width="match_parent"

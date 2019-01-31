@@ -53,9 +53,10 @@ public class MainActivity extends AppCompatActivity {
     String realPath;
     String userChoosenTask = "";
     Button btnSelect;
-    //ImageView ivImage;
+    ImageView imgViewImageTest;
     CircleImageView ivImage;
     ScrollingImageView scrollingImageView;
+    Uri uri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         init();
+
+        ivImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //View image using action View - Must request permission with android >
+                Intent intent = new Intent(MainActivity.this, ViewActivity.class);
+                //intent.setAction(android.content.Intent.ACTION_VIEW);
+                //intent.setDataAndType(uri, "image/*");
+                //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                intent.setData(uri);
+                startActivity(intent);
+            }
+        });
     }
 
     public void init() {
@@ -74,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 selectImage();
             }
         });
+
+        imgViewImageTest = (ImageView) findViewById(R.id.imgViewImageTest);
 
         //Test ScrollingImageView
         scrollingImageView = (ScrollingImageView) findViewById(R.id.testScroll);
@@ -184,10 +201,12 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
         Bitmap bm = null;
+        uri = data.getData();
         if (data != null) {
             try {
                 Log.d("Abc", "take galerry");
                 bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -197,11 +216,24 @@ public class MainActivity extends AppCompatActivity {
 
     private void onCaptureImageResult(Intent data) {
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-        Uri uri = data.getData();
+        uri = data.getData();
         realPath = getRealPathFromURI(uri);
 
-        Bitmap bm = ImageUtils.getInstant().getCompressedBitmap(realPath);
+        final Bitmap bm = ImageUtils.getInstant().getCompressedBitmap(realPath);
         ivImage.setImageBitmap(bm);
+
+        /*ivImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //View image using action View - Must request permission with android > M
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "image/*");
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                startActivity(intent);
+            }
+        });*/
 
         // CALL THIS METHOD TO GET THE URI FROM THE BITMAP
         Uri tempUri = getImageUri(getApplicationContext(), thumbnail);
@@ -247,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
         return Uri.parse(path);
     }
 
-    public String getRealPathFromURI(Uri uri) {
+    public  String getRealPathFromURI(Uri uri) {
         String path = "";
         if (getContentResolver() != null) {
             Cursor cursor = getContentResolver().query(uri, null, null, null, null);
